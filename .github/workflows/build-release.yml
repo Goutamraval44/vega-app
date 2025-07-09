@@ -40,25 +40,21 @@ jobs:
 
       - name: Fix NativeWind async PostCSS plugin error
         run: |
-          echo "Patching NativeWind extract-styles.js..."
-          FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
-          echo 'module.exports = async function extractStyles(css, cb) { return cb(await processor.process(css)) }' > "$FILE"
+          echo "Correctly patching NativeWind..."
+          cat <<EOF > node_modules/nativewind/dist/postcss/extract-styles.js
+const processor = require('./processor');
+
+exports.extractStyles = async function (css, cb) {
+  return cb(await processor.process(css));
+};
+EOF
 
       - name: Decode Keystore from Secret
         run: |
           echo "${{ secrets.MYAPP_UPLOAD_STORE_BASE64 }}" | base64 -d > android/app/${MYAPP_UPLOAD_STORE_FILE}
 
-      - name: Make Gradle Executable
+      - name: Make gradlew executable
         run: chmod +x android/gradlew
-
-      - name: Bundle JavaScript & Assets
-        run: |
-          NODE_ENV=production npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
 
       - name: Build Release APK
         run: |
