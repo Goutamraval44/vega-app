@@ -1,60 +1,72 @@
-name: Android Release APK Build
+name: Build & Upload Android Release
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
-    name: Build Release APK
+    name: Build Android Release APK
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+    env:
+      APP_ID: com.vega
+      VERSION_NAME: 3.1.1
+      VERSION_CODE: 311
+      MYAPP_UPLOAD_STORE_FILE: release.keystore
+      MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.MYAPP_UPLOAD_KEY_ALIAS }}
+      MYAPP_UPLOAD_STORE_PASSWORD: ${{ secrets.MYAPP_UPLOAD_STORE_PASSWORD }}
+      MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.MYAPP_UPLOAD_KEY_PASSWORD }}
 
-      - name: Set up Node
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: "temurin"
+          distribution: 'temurin'
           java-version: 17
-
-      - name: Install Yarn
-        run: npm install -g yarn
 
       - name: Install Dependencies
         run: yarn install
 
-      - name: Patch NativeWind for async PostCSS error
+      - name: Fix NativeWind async PostCSS plugin error
         run: |
+          echo "Patching NativeWind extract-styles.js..."
           FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
-          echo "Patching NativeWind..."
-          if grep -q "process(css).then(cb)" "$FILE"; then
-            sed -i 's/process(css).then(cb)/cb(await process(css))/g' "$FILE"
-            echo "Patch applied to NativeWind"
-          else
-            echo "Patch already applied or not needed"
-          fi
+          echo 'module.exports = async function extractStyles(css, cb) { return cb(await processor.process(css)) }' > "$FILE"
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
+      - name: Setup Android SDK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
 
-      - name: Clean and Build Release APK
+      - name: Decode Keystore from Secret
+        run: |
+          echo "${{ secrets.MYAPP_UPLOAD_STORE_BASE64 }}" | base64 -d > android/app/${MYAPP_UPLOAD_STORE_FILE}
+
+      - name: Bundle JS and Assets
         run: |
           cd android
-          ./gradlew clean
+          ./gradlew :app:bundleReleaseJsAndAssets
+
+      - name: Build Release APK
+        run: |
+          cd android
           ./gradlew assembleRelease
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vega-app-release-apk
+          name: release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
-
-
