@@ -45,7 +45,6 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug
-          cd ..
 
       - name: Find Built APKs
         run: find android/app/build/outputs -type f -name "*.apk"
