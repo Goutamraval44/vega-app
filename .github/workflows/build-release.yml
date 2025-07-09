@@ -48,6 +48,18 @@ jobs:
         run: |
           echo "${{ secrets.MYAPP_UPLOAD_STORE_BASE64 }}" | base64 -d > android/app/${MYAPP_UPLOAD_STORE_FILE}
 
+      - name: Make Gradle Executable
+        run: chmod +x android/gradlew
+
+      - name: Bundle JavaScript & Assets
+        run: |
+          NODE_ENV=production npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
       - name: Build Release APK
         run: |
           cd android
