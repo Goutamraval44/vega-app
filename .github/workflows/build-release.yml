@@ -31,6 +31,9 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
       - name: Clean and Build Release APK
         run: |
           cd android
