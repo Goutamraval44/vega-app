@@ -39,13 +39,16 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Configure Gradle Memory
-        run: |
-          echo "org.gradle.jvmargs=-Xmx4g" >> android/gradle.properties
+        run: echo "org.gradle.jvmargs=-Xmx4g" >> android/gradle.properties
 
       - name: Build Debug APK
         run: |
           cd android
           ./gradlew assembleDebug
+          cd ..
+
+      - name: Find Built APKs
+        run: find android/app/build/outputs -type f -name "*.apk"
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
