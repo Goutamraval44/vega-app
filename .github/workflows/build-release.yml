@@ -31,10 +31,16 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Patch NativeWind for async PostCSS issue
+      - name: Patch NativeWind for async PostCSS error
         run: |
-          echo "Patching NativeWind to disable async PostCSS plugin..."
-          sed -i 's/process(css).then(cb)/cb(await process(css))/g' node_modules/nativewind/dist/postcss/extract-styles.js
+          FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
+          echo "Patching NativeWind..."
+          if grep -q "process(css).then(cb)" "$FILE"; then
+            sed -i 's/process(css).then(cb)/cb(await process(css))/g' "$FILE"
+            echo "Patch applied to NativeWind"
+          else
+            echo "Patch already applied or not needed"
+          fi
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -50,3 +56,5 @@ jobs:
         with:
           name: vega-app-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+
+
