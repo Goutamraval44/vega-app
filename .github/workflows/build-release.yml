@@ -40,14 +40,9 @@ jobs:
 
       - name: Fix NativeWind async PostCSS plugin error
         run: |
-          echo "Correctly patching NativeWind..."
-          cat <<EOF > node_modules/nativewind/dist/postcss/extract-styles.js
-const processor = require('./processor');
-
-exports.extractStyles = async function (css, cb) {
-  return cb(await processor.process(css));
-};
-EOF
+          echo "Fixing NativeWind async extractStyles"
+          FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
+          echo "module.exports.extractStyles = async function(css, cb) { return cb(await processor.process(css)) };" > $FILE
 
       - name: Decode Keystore from Secret
         run: |
