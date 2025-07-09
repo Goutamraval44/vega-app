@@ -44,21 +44,9 @@ jobs:
           FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
           echo 'module.exports = async function extractStyles(css, cb) { return cb(await processor.process(css)) }' > "$FILE"
 
-      - name: Setup Android SDK
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          target: default
-          arch: x86_64
-
       - name: Decode Keystore from Secret
         run: |
           echo "${{ secrets.MYAPP_UPLOAD_STORE_BASE64 }}" | base64 -d > android/app/${MYAPP_UPLOAD_STORE_FILE}
-
-      - name: Bundle JS and Assets
-        run: |
-          cd android
-          ./gradlew :app:bundleReleaseJsAndAssets
 
       - name: Build Release APK
         run: |
