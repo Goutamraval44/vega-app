@@ -46,11 +46,13 @@ jobs:
           cd android
           ./gradlew assembleDebug
 
-      - name: Find Built APKs
-        run: find android/app/build/outputs -type f -name "*.apk"
+      - name: Rename APK with Timestamp
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/Vega-debug-$(date +%Y%m%d%H%M).apk
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: release/*.apk
