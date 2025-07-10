@@ -41,13 +41,25 @@ jobs:
       - name: Set GRADLE_OPTS environment variable
         run: echo "GRADLE_OPTS=-Xmx6g -XX:MaxMetaspaceSize=1g" >> $GITHUB_ENV
 
+      - name: Create required assets folder
+        run: mkdir -p android/app/src/main/assets
+
+      - name: Bundle JS into APK (no need to run Metro)
+        run: |
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
       - name: Build Debug APK
         run: |
           cd android
           ./gradlew clean
           ./gradlew assembleDebug -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g"
 
-      - name: List built APKs (debug)
+      - name: List built APKs
         run: |
           cd android
           find . -type f -name "*.apk"
@@ -68,3 +80,4 @@ jobs:
         with:
           name: debug-apk
           path: release/*.apk
+
