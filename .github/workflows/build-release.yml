@@ -35,15 +35,18 @@ jobs:
           FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
           echo "module.exports.extractStyles = async function(css, cb) { return cb(await processor.process(css)) };" > $FILE
 
+      - name: Configure Gradle Memory
+        run: |
+          GRADLE_PROPS=android/gradle.properties
+          sed -i 's|^org.gradle.jvmargs=.*|org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g|' "$GRADLE_PROPS"
+
       - name: Make gradlew executable
         run: chmod +x android/gradlew
-
-      - name: Configure Gradle Memory
-        run: echo "org.gradle.jvmargs=-Xmx4g" >> android/gradle.properties
 
       - name: Build Debug APK
         run: |
           cd android
+          ./gradlew clean
           ./gradlew assembleDebug
 
       - name: Rename APK with Timestamp
