@@ -38,20 +38,14 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Set Gradle Memory Settings
-        run: |
-          GRADLE_PROPS=android/gradle.properties
-          if [ ! -f "$GRADLE_PROPS" ]; then
-            touch "$GRADLE_PROPS"
-          fi
-          sed -i '/^org.gradle.jvmargs=/d' "$GRADLE_PROPS"
-          echo 'org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g' >> "$GRADLE_PROPS"
+      - name: Set GRADLE_OPTS environment variable
+        run: echo "GRADLE_OPTS=-Xmx6g -XX:MaxMetaspaceSize=1g" >> $GITHUB_ENV
 
       - name: Build Debug APK
         run: |
           cd android
           ./gradlew clean
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g"
 
       - name: List built APKs (debug)
         run: |
