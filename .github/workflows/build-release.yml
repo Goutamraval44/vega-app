@@ -35,11 +35,6 @@ jobs:
           FILE="node_modules/nativewind/dist/postcss/extract-styles.js"
           echo "module.exports.extractStyles = async function(css, cb) { return cb(await processor.process(css)) };" > $FILE
 
-      - name: Configure Gradle Memory
-        run: |
-          GRADLE_PROPS=android/gradle.properties
-          sed -i 's|^org.gradle.jvmargs=.*|org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g|' "$GRADLE_PROPS"
-
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
@@ -49,11 +44,21 @@ jobs:
           ./gradlew clean
           ./gradlew assembleDebug
 
+      - name: List built APKs (debug)
+        run: |
+          cd android
+          find . -type f -name "*.apk"
+
       - name: Rename APK with Timestamp
         run: |
           cd android
+          APK_PATH=$(find app/build -name "*.apk" | grep debug | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "APK not found. Build may have failed."
+            exit 1
+          fi
           mkdir -p ../release
-          cp app/build/outputs/apk/debug/app-debug.apk ../release/Vega-debug-$(date +%Y%m%d%H%M).apk
+          cp "$APK_PATH" ../release/Vega-debug-$(date +%Y%m%d%H%M).apk
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
